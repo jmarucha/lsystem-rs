@@ -1,9 +1,10 @@
 // rotate - move - scale - rotate
 
-extern crate nalgebra as nalgebra;
+extern crate nalgebra as na;
+use std::collections::VecDeque;
 use std::f64::consts::{PI, SQRT_2};
 
-use na::{Affine3, Rotation3, Scale3, Translation3, Vector3};
+use na::{Affine3, Point3, Rotation3, Scale3, Translation3, Vector3};
 
 // todo - generalize type
 pub fn get_transformation_matrix(
@@ -27,4 +28,29 @@ pub fn get_2d_transformation(rot: f64, scale: f64) -> Affine3<f64> {
 
 pub fn test_tree() -> Affine3<f64> {
     get_2d_transformation(PI / 2., 1. / SQRT_2)
+}
+
+pub fn getPointsBFS(transformations: &[Affine3<f64>], max_depth: i32) -> Vec<Point3<f64>> {
+    let mut output: Vec<Point3<f64>> = Vec::new();
+    let mut queue: VecDeque<(Point3<f64>, i32)> = VecDeque::new();
+
+    queue.push_back((Point3::origin(), max_depth));
+
+    while !queue.is_empty() {
+        let (point, rdepth) = queue.front().expect("Empyt Queue").clone();
+
+        if rdepth > 0 {
+            for transformation in transformations {
+                queue.push_back((transformation * point, rdepth - 1));
+            }
+        }
+        queue.pop_front();
+        output.push(point);
+    }
+    output
+}
+
+
+pub fn test_tree_right() -> Affine3<f64> {
+    get_2d_transformation(-PI / 2., 1. / SQRT_2)
 }

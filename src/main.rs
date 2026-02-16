@@ -1,20 +1,14 @@
 mod lsystem;
+mod lsystem_test;
 
-extern crate nalgebra as na;
-use na::{Affine3, Point3, Rotation3, Scale3, Translation3, Vector3};
+use crate::lsystem_test::test_tree_that_sucks;
 
-use crate::lsystem::test_tree;
-
-// use lsystem::pyth_tree1;
+use crate::lsystem_test::test_bfs_that_sucks;
 
 fn main() {
     println!("Hello, world!");
-    let trans= test_tree();
-    println!("{}", test_tree().into_inner());
+    test_tree_that_sucks();
 
-    let mut pt = Point3::origin();
-    for _ in 1..20 {
-        println!("{}", pt);
-        pt = trans * pt
-    }
+    println!("dupa");
+    test_bfs_that_sucks();
 }
