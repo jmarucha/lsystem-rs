@@ -10,8 +10,9 @@ use crate::lsystem::test_actually_nice_tree;
 #[macro_use]
 extern crate glium;
 use glium::Surface;
-use nalgebra::Point2;
 use nalgebra::Point3;
+
+const RDEPTH: i32 = 10;
 
 fn main() {
     // We start by creating the EventLoop, this can only be done once per process.
@@ -35,20 +36,23 @@ fn main() {
         Vertex { position: [ 0.1, -0.25] }
     ];
 
-    let shape_iter = get_points_bfs(&test_actually_nice_tree(), 2).into_iter().map(|point: Point3<_>| -> Vertex {Vertex { position: [point[0],point[1]] }});
+    let shape_iter = get_points_bfs(&test_actually_nice_tree(), RDEPTH).into_iter().map(|point: Point3<_>| -> Vertex {Vertex { position: [point[0],point[1]] }});
     let shape = Vec::from_iter(shape_iter);
-    println!("{:#?}", shape);
 ;
     let vertex_buffer = glium::VertexBuffer::new(&display, &shape).unwrap();
     let indices = glium::index::NoIndices(glium::index::PrimitiveType::LinesList);
+    //let indices = glium::index::NoIndices(glium::index::PrimitiveType::Points);
 
     let vertex_shader_src = r#"
         #version 140
 
         in vec2 position;
 
+        #define SCALE 2.0
+        #define AR 4.0/3.0
+
         void main() {
-            gl_Position = vec4(position/4.0, 0.0, 1.0);
+            gl_Position = vec4(position.x/SCALE, position.y*AR/SCALE-0.6, 0.0, 1.0);
         }
     "#;
 
@@ -58,14 +62,14 @@ fn main() {
         out vec4 color;
 
         void main() {
-            color = vec4(1.0, 0.0, 0.0, 1.0);
+            color = vec4(0.7, 1.0, 0.1, 1.0);
         }
     "#;
 
     let program = glium::Program::from_source(&display, vertex_shader_src, fragment_shader_src, None).unwrap();
 
     let mut target = display.draw();
-    target.clear_color(0.0, 0.0, 1.0, 1.0);
+    target.clear_color(0.0, 0.0, 0.0, 1.0);
     target.draw(&vertex_buffer, &indices, &program, &glium::uniforms::EmptyUniforms,
         &Default::default()).unwrap();
     target.finish().unwrap();
