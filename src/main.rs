@@ -1,6 +1,8 @@
 mod lsystem;
 mod lsystem_test;
 
+use std::f32::consts::PI;
+
 use crate::lsystem::get_points_bfs;
 use crate::lsystem_test::test_tree_that_sucks;
 
@@ -10,6 +12,8 @@ use crate::lsystem::test_actually_nice_tree;
 #[macro_use]
 extern crate glium;
 use glium::Surface;
+use nalgebra::Perspective3;
+use nalgebra as na;
 use nalgebra::Point3;
 
 const RDEPTH: i32 = 10;
@@ -26,14 +30,17 @@ fn main() {
 
     #[derive(Copy, Clone, Debug)]
     struct Vertex {
-        position: [f64;2]
+        position: [f32;2]
     }
     implement_vertex!(Vertex, position);
-    let shape = vec![
-        Vertex { position: [-0.5, -0.5] },
-        Vertex { position: [ 0.0,  0.5] },
-        Vertex { position: [ 0.5, -0.25] },
-        Vertex { position: [ 0.1, -0.25] }
+
+    //let perspective = na::Perspective3::new(4./3., PI/3., -1., 1.).into_inner();
+    //let perspective_raw: [[f32;4]; 4] = perspective.into();
+    let perspective_raw = [
+        [0.1, 0.0, 0.0, 0.0],
+        [0.0, 0.1, 0.0, 0.0],
+        [0.0, 0.0, 0.1, 0.0],
+        [0.0, 0.0, 2.0, 1.0f32]
     ];
 
     let shape_iter = get_points_bfs(&test_actually_nice_tree(), RDEPTH).into_iter().map(|point: Point3<_>| -> Vertex {Vertex { position: [point[0],point[1]] }});
@@ -47,12 +54,17 @@ fn main() {
         #version 140
 
         in vec2 position;
+        // uniform mat4 perspective;
+        uniform float scale;
 
         #define SCALE 2.0
         #define AR 4.0/3.0
 
         void main() {
-            gl_Position = vec4(position.x/SCALE, position.y*AR/SCALE-0.6, 0.0, 1.0);
+            // gl_Position = vec4(position.x/SCALE, position.y*AR/SCALE-0.6, 0.0, 1.0);
+            gl_Position = vec4(position.x/scale, position.y*AR/scale-0.6, 0.0, 1.0);
+
+            //gl_Position = perspective*vec4(position.x, position.y, 0.0, 1.0);
         }
     "#;
 
@@ -60,9 +72,10 @@ fn main() {
         #version 140
 
         out vec4 color;
+        // uniform vec3 csetting;
 
         void main() {
-            color = vec4(0.7, 1.0, 0.1, 1.0);
+            color = vec4(1.0, 0., 0., 1.0);
         }
     "#;
 
@@ -70,7 +83,7 @@ fn main() {
 
     let mut target = display.draw();
     target.clear_color(0.0, 0.0, 0.0, 1.0);
-    target.draw(&vertex_buffer, &indices, &program, &glium::uniforms::EmptyUniforms,
+    target.draw(&vertex_buffer, &indices, &program, &uniform!{scale: 2.0f32},
         &Default::default()).unwrap();
     target.finish().unwrap();
 
