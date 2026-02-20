@@ -1,5 +1,5 @@
 use glium::{
-    DrawParameters, Program, Surface, backend::glutin::Display, glutin::surface::WindowSurface, index::NoIndices
+    Program, Surface, backend::glutin::Display, glutin::surface::WindowSurface, index::NoIndices,
 };
 use nalgebra::Point3;
 
@@ -14,7 +14,7 @@ implement_vertex!(Vertex, position);
 pub struct Render {
     display: Display<WindowSurface>,
     indices: NoIndices,
-    program: Program
+    program: Program,
 }
 
 impl Render {
@@ -70,7 +70,7 @@ impl Render {
         Render {
             display,
             indices,
-            program
+            program,
         }
     }
 
@@ -78,14 +78,13 @@ impl Render {
         let shape = points_to_vertices(points);
         let vertex_buffer = glium::VertexBuffer::new(&self.display, &shape).unwrap();
 
-        
         let params = glium::DrawParameters {
             depth: glium::Depth {
                 test: glium::draw_parameters::DepthTest::IfLess,
                 write: true,
-                .. Default::default()
+                ..Default::default()
             },
-            .. Default::default()
+            ..Default::default()
         };
 
         // draw
