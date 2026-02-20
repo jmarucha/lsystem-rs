@@ -39,12 +39,13 @@ impl Render {
             in vec3 position;
             // uniform mat4 perspective;
             uniform float scale;
+            uniform float cam_x, cam_y;
 
             out float c;
 
             void main() {
-                // gl_Position = vec4(position.x/scale, position.y*AR/scale-0.6, 0.0, 1.0);
-                gl_Position = vec4(position.x/scale-0.3, position.y*AR/scale, 0.0, 1.0);
+                // gl_Position = vec4((position.x)/scale, position.y*AR/scale-0.6, 0.0, 1.0);
+                gl_Position = vec4((position.x+cam_x)/scale-0.3, (position.y+cam_y)*AR/scale, 0.0, 1.0);
                 c = clamp(3*position.z, 0., 1.);
 
                 //gl_Position = perspective*vec4(position.x, position.y, position.z, 1.0);
@@ -74,7 +75,7 @@ impl Render {
         }
     }
 
-    pub fn draw(self: &Self, points: Vec<Point3<f32>>) -> () {
+    pub fn draw(self: &Self, points: Vec<Point3<f32>>, cam_x: f32, cam_y: f32) -> () {
         let shape = points_to_vertices(points);
         let vertex_buffer = glium::VertexBuffer::new(&self.display, &shape).unwrap();
 
@@ -95,7 +96,7 @@ impl Render {
                 &vertex_buffer,
                 &self.indices,
                 &self.program,
-                &uniform! {scale: 2.0f32},
+                &uniform! {scale: 2.0f32, cam_x: cam_x, cam_y: cam_y},
                 &params,
             )
             .unwrap();

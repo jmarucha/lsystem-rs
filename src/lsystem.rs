@@ -2,7 +2,7 @@
 
 extern crate nalgebra as na;
 use std::collections::VecDeque;
-use std::f32::consts::{PI, SQRT_2};
+use std::f32::consts::PI;
 
 use na::{Affine3, Point3, Rotation3, Scale3, Translation3};
 
