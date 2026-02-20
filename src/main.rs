@@ -1,7 +1,6 @@
+mod glue;
 mod lsystem;
 mod render;
-mod glue;
-
 
 use crate::lsystem::get_points_bfs;
 use crate::lsystem::test_actually_nice_tree;
@@ -25,19 +24,19 @@ fn main() {
 
     let points = get_points_bfs(&test_actually_nice_tree(), RDEPTH);
     let render = Render::init_render(display);
+
     render.draw(points);
 
     #[allow(deprecated)]
-    event_loop.run(move |ev, window_target| {
-        match ev {
+    event_loop
+        .run(move |ev, window_target| match ev {
             glium::winit::event::Event::WindowEvent { event, .. } => match event {
                 glium::winit::event::WindowEvent::CloseRequested => {
                     window_target.exit();
-                },
+                }
                 _ => (),
             },
             _ => (),
-        }
-    })
-    .unwrap();
+        })
+        .unwrap();
 }
