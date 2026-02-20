@@ -1,13 +1,10 @@
 // rotate - move - scale - rotate
 
 extern crate nalgebra as na;
-use core::fmt;
 use std::collections::VecDeque;
 use std::f32::consts::{PI, SQRT_2};
-use std::fmt::Debug;
 
-use na::{Affine3, Point3, Rotation3, Scale3, Translation3, Vector3};
-use nalgebra::UnitVector3;
+use na::{Affine3, Point3, Rotation3, Scale3, Translation3};
 
 // todo - generalize type
 pub fn get_transformation_matrix(
@@ -29,16 +26,12 @@ pub fn get_2d_transformation(rot: f32, scale: f32) -> Affine3<f32> {
     )
 }
 
-pub fn get_2dd_transformation(rot: f32, scale: f32) -> Affine3<f32> {
+pub fn _get_2dd_transformation(rot: f32, scale: f32) -> Affine3<f32> {
     get_transformation_matrix(
         &Rotation3::from_euler_angles(1.,2.,3.),
         &Translation3::new(0., 1., 0.),
         &Scale3::new(scale, scale, scale),
     )
-}
-
-pub fn test_tree() -> Affine3<f32> {
-    get_2d_transformation(PI / 2., 1. / SQRT_2)
 }
 
 pub fn get_points_bfs(transformations: &[Affine3<f32>], max_depth: i32) -> Vec<Point3<f32>> {
@@ -60,11 +53,6 @@ pub fn get_points_bfs(transformations: &[Affine3<f32>], max_depth: i32) -> Vec<P
         }
     }
     output
-}
-
-
-pub fn test_tree_right() -> Affine3<f32> {
-    get_2d_transformation(-PI / 2., 1. / SQRT_2)
 }
 
 

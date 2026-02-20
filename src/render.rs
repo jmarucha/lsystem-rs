@@ -2,10 +2,12 @@
 use glium::{Program, Surface, backend::glutin::Display, glutin::surface::WindowSurface, index::NoIndices};
 use nalgebra::Point3;
 
+use crate::glue::points_to_vertices;
 
-#[derive(Copy, Clone, Debug)]
-struct Vertex {
-    position: [f32;2]
+
+#[derive(Copy, Clone)]
+pub struct Vertex {
+    pub position: [f32;3]
 }
 implement_vertex!(Vertex, position);
 
@@ -19,12 +21,12 @@ impl Render {
     pub fn init_render(display: Display<WindowSurface>) -> Self {
         //let perspective = na::Perspective3::new(4./3., PI/3., -1., 1.).into_inner();
         //let perspective_raw: [[f32;4]; 4] = perspective.into();
-        let perspective_raw = [
-            [0.1, 0.0, 0.0, 0.0],
-            [0.0, 0.1, 0.0, 0.0],
-            [0.0, 0.0, 0.1, 0.0],
-            [0.0, 0.0, 2.0, 1.0f32]
-        ];
+        // let perspective_raw = [
+        //     [0.1, 0.0, 0.0, 0.0],
+        //     [0.0, 0.1, 0.0, 0.0],
+        //     [0.0, 0.0, 0.1, 0.0],
+        //     [0.0, 0.0, 2.0, 1.0f32]
+        // ];
 
 
         let indices = glium::index::NoIndices(glium::index::PrimitiveType::LinesList);
@@ -33,7 +35,7 @@ impl Render {
         let vertex_shader_src = r#"
             #version 140
 
-            in vec2 position;
+            in vec3 position;
             // uniform mat4 perspective;
             uniform float scale;
 
@@ -44,7 +46,7 @@ impl Render {
                 // gl_Position = vec4(position.x/SCALE, position.y*AR/SCALE-0.6, 0.0, 1.0);
                 gl_Position = vec4(position.x/scale, position.y*AR/scale-0.6, 0.0, 1.0);
 
-                //gl_Position = perspective*vec4(position.x, position.y, 0.0, 1.0);
+                //gl_Position = perspective*vec4(position.x, position.y, position.z, 1.0);
             }
         "#;
 
@@ -64,9 +66,7 @@ impl Render {
     }
 
     pub fn draw(self: &Self, points: Vec<Point3<f32>>) -> () {
-        // convert to vertex buffer
-        let shape_iter = points.into_iter().map(|point: Point3<_>| -> Vertex {Vertex { position: [point[0],point[1]] }});
-        let shape = Vec::from_iter(shape_iter);
+        let shape = points_to_vertices(points);
         let vertex_buffer = glium::VertexBuffer::new(&self.display, &shape).unwrap();
 
         // draw

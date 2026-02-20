@@ -1,21 +1,13 @@
 mod lsystem;
-mod lsystem_test;
 mod render;
+mod glue;
 
-use std::f32::consts::PI;
 
 use crate::lsystem::get_points_bfs;
-use crate::lsystem_test::test_tree_that_sucks;
-
-use crate::lsystem_test::test_bfs_that_sucks;
 use crate::lsystem::test_actually_nice_tree;
 
 #[macro_use]
 extern crate glium;
-use glium::Surface;
-use nalgebra::Perspective3;
-use nalgebra as na;
-use nalgebra::Point3;
 
 use crate::render::Render;
 
@@ -34,7 +26,6 @@ fn main() {
     let points = get_points_bfs(&test_actually_nice_tree(), RDEPTH);
     let render = Render::init_render(display);
     render.draw(points);
-    
 
     #[allow(deprecated)]
     event_loop.run(move |ev, window_target| {
