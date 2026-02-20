@@ -10,16 +10,17 @@ extern crate glium;
 
 use crate::render::Render;
 
-const RDEPTH: i32 = 10;
+const RDEPTH: i32 = 11;
 
 fn main() {
     // We start by creating the EventLoop, this can only be done once per process.
     // This also needs to happen on the main thread to make the program portable.
     let event_loop = glium::winit::event_loop::EventLoop::builder()
         .build()
-        .expect("event loop building");
+        .unwrap();
     let (_window, display) = glium::backend::glutin::SimpleWindowBuilder::new()
         .with_title("Glium tutorial #2")
+        .with_inner_size(1920, 1080)
         .build(&event_loop);
 
     let points = get_points_bfs(&test_actually_nice_tree(), RDEPTH);

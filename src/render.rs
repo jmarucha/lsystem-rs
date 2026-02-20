@@ -1,5 +1,5 @@
 use glium::{
-    Program, Surface, backend::glutin::Display, glutin::surface::WindowSurface, index::NoIndices,
+    DrawParameters, Program, Surface, backend::glutin::Display, glutin::surface::WindowSurface, index::NoIndices
 };
 use nalgebra::Point3;
 
@@ -14,7 +14,7 @@ implement_vertex!(Vertex, position);
 pub struct Render {
     display: Display<WindowSurface>,
     indices: NoIndices,
-    program: Program,
+    program: Program
 }
 
 impl Render {
@@ -44,8 +44,8 @@ impl Render {
 
             void main() {
                 // gl_Position = vec4(position.x/scale, position.y*AR/scale-0.6, 0.0, 1.0);
-                gl_Position = vec4(position.x/scale, position.y*AR/scale, 0.0, 1.0);
-                c = clamp(2*position.z+1, 0., 1.);
+                gl_Position = vec4(position.x/scale-0.3, position.y*AR/scale, 0.0, 1.0);
+                c = clamp(3*position.z, 0., 1.);
 
                 //gl_Position = perspective*vec4(position.x, position.y, position.z, 1.0);
             }
@@ -66,10 +66,11 @@ impl Render {
         let program =
             glium::Program::from_source(&display, vertex_shader_src, fragment_shader_src, None)
                 .unwrap();
+
         Render {
             display,
             indices,
-            program,
+            program
         }
     }
 
@@ -77,16 +78,26 @@ impl Render {
         let shape = points_to_vertices(points);
         let vertex_buffer = glium::VertexBuffer::new(&self.display, &shape).unwrap();
 
+        
+        let params = glium::DrawParameters {
+            depth: glium::Depth {
+                test: glium::draw_parameters::DepthTest::IfLess,
+                write: true,
+                .. Default::default()
+            },
+            .. Default::default()
+        };
+
         // draw
         let mut target = self.display.draw();
-        target.clear_color(0.0, 0.0, 0.0, 1.0);
+        target.clear_color_and_depth((0.0, 0.0, 0.0, 1.0), 1.0);
         target
             .draw(
                 &vertex_buffer,
                 &self.indices,
                 &self.program,
                 &uniform! {scale: 2.0f32},
-                &Default::default(),
+                &params,
             )
             .unwrap();
         target.finish().unwrap();
