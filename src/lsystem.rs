@@ -57,8 +57,8 @@ pub fn get_points_bfs(transformations: &[Affine3<f32>], max_depth: i32) -> Vec<P
 
 pub fn test_actually_nice_tree() -> [Affine3<f32>; 3] {
     [
-        _get_2dd_transformation(PI / 4., 0.5),
-        _get_2dd_transformation(-PI / 4., 0.5),
+        _get_2dd_transformation(3.*PI / 4., 0.5),
+        _get_2dd_transformation(-PI / 4., 0.6),
         _get_2dd_transformation(0., 0.7),
         //get_2d_transformation(-PI / 2., 0.3)
     ]

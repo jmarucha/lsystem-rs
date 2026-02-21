@@ -2,6 +2,8 @@ mod glue;
 mod lsystem;
 mod render;
 
+use std::time::SystemTime;
+
 use crate::lsystem::get_points_bfs;
 use crate::lsystem::test_actually_nice_tree;
 
@@ -15,24 +17,26 @@ use glium::winit::event::WindowEvent as WindowEventType;
 use glium::winit::keyboard::Key;
 use glium::winit::keyboard::NamedKey;
 
-const RDEPTH: i32 = 11;
+const RDEPTH: i32 = 14;
 
 fn main() {
-    // We start by creating the EventLoop, this can only be done once per process.
-    // This also needs to happen on the main thread to make the program portable.
+    let now = SystemTime::now();
+
     let event_loop = glium::winit::event_loop::EventLoop::builder()
         .build()
         .unwrap();
     let (window, display) = glium::backend::glutin::SimpleWindowBuilder::new()
-        .with_title("Glium tutorial #2")
+        .with_title("Trees")
         .with_inner_size(1920, 1080)
         .build(&event_loop);
 
     let points = get_points_bfs(&test_actually_nice_tree(), RDEPTH);
-    let render = Render::init_render(display);
+    let mut render = Render::init_render(display);
 
     let mut cam_x = 0.0;
     let mut cam_y = 0.0;
+
+    render.set_vertex_buffer(points);
 
     #[allow(deprecated)]
     event_loop
@@ -56,7 +60,8 @@ fn main() {
                     _ => (),
                 },
                 WindowEventType::RedrawRequested => {
-                    render.draw(points.clone(), cam_x, cam_y);
+                    let current_time = now.elapsed().unwrap_or_default().as_millis() as f32;
+                    render.draw(cam_x, cam_y, current_time);
                     window.request_redraw();
                 }
                 _ => (),
