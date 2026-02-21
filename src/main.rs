@@ -17,7 +17,7 @@ use glium::winit::event::WindowEvent as WindowEventType;
 use glium::winit::keyboard::Key;
 use glium::winit::keyboard::NamedKey;
 
-const RDEPTH: i32 = 14;
+const RDEPTH: i32 = 10;
 
 fn main() {
     let now = SystemTime::now();

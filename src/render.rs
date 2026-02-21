@@ -1,7 +1,8 @@
 use glium::{
-    Program, Surface, VertexBuffer, backend::glutin::Display, glutin::surface::WindowSurface, index::NoIndices
+    Program, Surface, VertexBuffer, backend::glutin::Display, glutin::surface::WindowSurface,
+    index::NoIndices,
 };
-use nalgebra::Point3;
+use nalgebra::{Isometry3, Perspective3, Point3, Vector3};
 
 use crate::glue::points_to_vertices;
 
@@ -15,20 +16,11 @@ pub struct Render {
     display: Display<WindowSurface>,
     indices: NoIndices,
     program: Program,
-    vertex_buffer: Option<VertexBuffer<Vertex>>
+    vertex_buffer: Option<VertexBuffer<Vertex>>,
 }
 
 impl Render {
     pub fn init_render(display: Display<WindowSurface>) -> Self {
-        //let perspective = na::Perspective3::new(4./3., PI/3., -1., 1.).into_inner();
-        //let perspective_raw: [[f32;4]; 4] = perspective.into();
-        // let perspective_raw = [
-        //     [0.1, 0.0, 0.0, 0.0],
-        //     [0.0, 0.1, 0.0, 0.0],
-        //     [0.0, 0.0, 0.1, 0.0],
-        //     [0.0, 0.0, 2.0, 1.0f32]
-        // ];
-
         let indices = glium::index::NoIndices(glium::index::PrimitiveType::LinesList);
         //let indices = glium::index::NoIndices(glium::index::PrimitiveType::Points);
 
@@ -38,28 +30,24 @@ impl Render {
             #define AR 4.0/3.0
 
             in vec3 position;
-            // uniform mat4 perspective;
-            uniform float scale;
-            uniform vec2 cam;
             uniform float current_time;
 
             out float c;
             
             mat3 rotate2d(float _angle){
                 return mat3(
-                    cos(_angle), 0 , -sin(_angle),
+                    cos(_angle), 0 , +sin(_angle),
                     0, 1, 0,
-                    sin(_angle), 0,   cos(_angle)
+                    -sin(_angle), 0,   cos(_angle)
                     );
                 }
+            uniform mat4 pmatrix;
+            uniform mat4 camera;
 
             void main() {
-                // gl_Position = vec4((position.x)/scale, position.y*AR/scale-0.6, 0.0, 1.0);
-                vec3 new_position = rotate2d(current_time/1000) * position;
-                gl_Position = vec4((new_position.x+cam.x)/scale-0.3, (new_position.y+cam.y)*AR/scale, new_position.z/10., 1.0);
-                c = exp(-new_position.z-0.5);
-
-                //gl_Position = perspective*vec4(position.x, position.y, position.z, 1.0);
+                vec4 new_position = pmatrix*camera*vec4(rotate2d(current_time/1000) * position, 1.0);
+                gl_Position = new_position;
+                c = exp(4.0 - new_position.z)/2;
             }
         "#;
 
@@ -71,7 +59,7 @@ impl Render {
 
             void main() {
                 float intensity = clamp(c,0,1);
-                float light = clamp(c-1,0,1); 
+                float light = clamp((c-1),0,1); 
                 color = vec4(intensity, light, 0., 1.0);
             }
         "#;
@@ -84,7 +72,7 @@ impl Render {
             display,
             indices,
             program,
-            vertex_buffer: None
+            vertex_buffer: None,
         }
     }
 
@@ -94,8 +82,7 @@ impl Render {
         self.vertex_buffer = Some(vertex_buffer);
     }
 
-    pub fn draw(self: &Self, cam_x: f32, cam_y: f32, current_time: f32) -> () {
-
+    pub fn draw(self: &Self, _cam_x: f32, cam_y: f32, current_time: f32) -> () {
         let params = glium::DrawParameters {
             depth: glium::Depth {
                 test: glium::draw_parameters::DepthTest::IfLess,
@@ -104,9 +91,27 @@ impl Render {
             },
             ..Default::default()
         };
-
         // draw
         let mut target = self.display.draw();
+        let perspective: [[f32; 4]; 4] = {
+            let (width, height) = target.get_dimensions();
+            let aspect_ratio = height as f32 / width as f32;
+            Perspective3::new(1. / aspect_ratio, 3.141 / 6.0, 0.1, 10.0)
+                .into_inner()
+                .into()
+        };
+
+        let r = 4.;
+
+        let camera: [[f32; 4]; 4] = Isometry3::look_at_rh(
+            &Point3::new(0., r * cam_y.sin(), r * cam_y.cos()),
+            &Point3::origin(),
+            &Vector3::new(0., 1., 0.),
+        )
+        .to_homogeneous()
+        .into();
+        println!("{:?}", camera);
+
         target.clear_color_and_depth((0.0, 0.0, 0.0, 1.0), 1.0);
         let vb = self.vertex_buffer.as_ref().unwrap();
         target
@@ -114,7 +119,11 @@ impl Render {
                 vb,
                 &self.indices,
                 &self.program,
-                &uniform! {scale: 2.0f32, cam: [cam_x, cam_y], current_time: current_time},
+                &uniform! {
+                    current_time: current_time,
+                    pmatrix: perspective,
+                    camera: camera
+                },
                 &params,
             )
             .unwrap();
