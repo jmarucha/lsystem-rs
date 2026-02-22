@@ -46,6 +46,7 @@ impl Render {
 
             void main() {
                 vec4 new_position = pmatrix*camera*vec4(rotate2d(current_time/1000) * position, 1.0);
+                new_position.y = new_position.y - 3.;
                 gl_Position = new_position;
                 c = exp(4.0 - new_position.z)/2;
             }
@@ -60,7 +61,7 @@ impl Render {
             void main() {
                 float intensity = clamp(c,0,1);
                 float light = clamp((c-1),0,1); 
-                color = vec4(intensity, light, 0., 1.0);
+                color = vec4(light, intensity, 0., 1.0);
             }
         "#;
 
@@ -113,7 +114,7 @@ impl Render {
         println!("{:?}", camera);
 
         target.clear_color_and_depth((0.0, 0.0, 0.0, 1.0), 1.0);
-        let vb = self.vertex_buffer.as_ref().unwrap();
+        let vb = self.vertex_buffer.as_ref().expect("Vertex Buffer unset.");
         target
             .draw(
                 vb,

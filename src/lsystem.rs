@@ -28,7 +28,7 @@ pub fn _get_2d_transformation(rot: f32, scale: f32) -> Affine3<f32> {
 
 pub fn _get_2dd_transformation(rot: f32, scale: f32) -> Affine3<f32> {
     get_transformation_matrix(
-        &Rotation3::from_euler_angles(1., 1., rot),
+        &Rotation3::from_euler_angles(0., PI/2., rot),
         &Translation3::new(0., 1., 0.),
         &Scale3::new(scale, scale, scale),
     )
@@ -108,12 +108,10 @@ pub fn get_points_dfs(transformations: &[Affine3<f32>], max_depth: i32) -> Vec<P
     output
 }
 
-pub fn test_actually_nice_tree() -> [Affine3<f32>; 5] {
+pub fn test_actually_nice_tree() -> [Affine3<f32>; 3] {
     [
-        _get_2d_transformation(3. * PI / 4., 0.5),
-        _get_2d_transformation(-PI / 4., 0.6),
-        _get_2dd_transformation(0., 0.5),
-        _get_2d_transformation(PI / 2., 0.3),
-        _get_2d_transformation(-PI / 2., 0.3),
+        _get_2dd_transformation(-PI / 4., 0.5),
+        _get_2dd_transformation(0., 0.65),
+        _get_2dd_transformation(PI / 4., 0.5),
     ]
 }
