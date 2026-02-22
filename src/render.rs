@@ -1,8 +1,9 @@
 use glium::{
-    BlitTarget, Program, Rect, Surface, Texture2d, VertexBuffer, backend::glutin::Display, glutin::surface::WindowSurface, index::NoIndices, program::Uniform, uniforms::{AsUniformValue, EmptyUniforms}
+    BlitTarget, Program, Rect, Surface, Texture2d, VertexBuffer,
+    backend::glutin::Display, glutin::surface::WindowSurface, index::{NoIndices, PrimitiveType}
 };
 use nalgebra::{Isometry3, Perspective3, Point3, Vector3};
-use rand::{prelude::*, random_range};
+use rand::random_range;
 use glium::uniforms::MagnifySamplerFilter::Nearest;
 
 use crate::glue::points_to_vertices;
@@ -34,11 +35,11 @@ impl Render {
     pub fn init_render(display: Display<WindowSurface>) -> Self {
         let (w, h) = display.get_framebuffer_dimensions();
 
-        let target_frame = glium::Texture2d::empty(&display, w, h).unwrap();
-        let previous_frame = glium::Texture2d::empty(&display, w, h).unwrap();
+        let target_frame = Texture2d::empty(&display, w, h).unwrap();
+        let previous_frame = Texture2d::empty(&display, w, h).unwrap();
 
 
-        let indices = glium::index::NoIndices(glium::index::PrimitiveType::LinesList);
+        let indices = NoIndices(PrimitiveType::LinesList);
 
         let vertex_shader_src = r#"
             #version 140
@@ -86,7 +87,7 @@ impl Render {
         "#;
 
         let program =
-            glium::Program::from_source(&display, vertex_shader_src, fragment_shader_src, None)
+            Program::from_source(&display, vertex_shader_src, fragment_shader_src, None)
                 .unwrap();
         
         let blend_program = Program::from_source(
@@ -123,7 +124,7 @@ impl Render {
             Vertex2d { position: [1., 1.]},
             Vertex2d { position: [-1., 1.]},
         ];
-        let full_screen_quad = glium::VertexBuffer::new(&display,
+        let full_screen_quad = VertexBuffer::new(&display,
             &full_screen_quad_vertices).unwrap();
 
         Render {
@@ -140,7 +141,7 @@ impl Render {
 
     pub fn set_vertex_buffer(self: &mut Self, points: Vec<Point3<f32>>) -> &mut Self {
         let shape = points_to_vertices(points);
-        let vertex_buffer = glium::VertexBuffer::new(&self.display, &shape).unwrap();
+        let vertex_buffer = VertexBuffer::new(&self.display, &shape).unwrap();
         self.vertex_buffer = Some(vertex_buffer);
         self
     }
@@ -213,7 +214,7 @@ impl Render {
         target.clear_color(0.0, 0.0, 0.0, 1.0);
         target.draw(
             &self.full_screen_quad,
-            &glium::index::NoIndices(glium::index::PrimitiveType::TrianglesList),
+            &NoIndices(PrimitiveType::TrianglesList),
             &self.blend_program,
             &uniform! {
                 target_frame: &self.target_frame,
