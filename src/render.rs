@@ -26,8 +26,6 @@ impl Render {
 
         let vertex_shader_src = r#"
             #version 140
-            #define SCALE 2.0
-            #define AR 4.0/3.0
 
             in vec3 position;
             uniform float current_time;
@@ -102,7 +100,7 @@ impl Render {
                 .into()
         };
 
-        let r = 4.;
+        let r = 5.;
 
         let camera: [[f32; 4]; 4] = Isometry3::look_at_rh(
             &Point3::new(0., r * cam_y.sin(), r * cam_y.cos()),
