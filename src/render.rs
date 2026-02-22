@@ -112,7 +112,9 @@ impl Render {
             void main() {
                 vec4 target_frame_col = texture(target_frame, pos);
                 vec4 previous_frame_col = texture(previous_frame, pos);
-                color = 0.2*target_frame_col+0.8*previous_frame_col;
+                float t = 0.0625;
+                color = t*target_frame_col+(1-t)*previous_frame_col-0.00390625*vec4(1,1,1,0);
+
             }
             "#, None).unwrap();
 
@@ -146,7 +148,7 @@ impl Render {
         self
     }
 
-    pub fn draw(self: &Self, _cam_x: f32, cam_y: f32, current_time: f32, taa: bool) -> &Self {
+    pub fn draw(self: &Self, cam_x: f32, cam_y: f32, current_time: f32, taa: bool) -> &Self {
         let params = glium::DrawParameters {
             depth: glium::Depth {
                 test: glium::draw_parameters::DepthTest::IfLess,
@@ -155,15 +157,12 @@ impl Render {
             },
             ..Default::default()
         };
-        // draw
-        let mut target = self.display.draw();
-
-        let (width, height) = target.get_dimensions();
-        let dx = 1. / width as f32;
-        let dy = 1. / height as f32;
+        let (width, height) = self.display.get_framebuffer_dimensions();
+        let dx = 2. / width as f32;
+        let dy = 2. / height as f32;
         let taa_offset = [
-            random_range(-dx..dx),
-            random_range(-dy..dy)
+            (random_range(-dx..dx)+random_range(-dx..dx))/2.,
+            (random_range(-dy..dy)+random_range(-dy..dy))/2.,
         ];
 
         let perspective: [[f32; 4]; 4] = {
@@ -176,7 +175,7 @@ impl Render {
         let r = 4.;
 
         let camera: [[f32; 4]; 4] = Isometry3::look_at_rh(
-            &Point3::new(0., r * cam_y.sin(), r * cam_y.cos()),
+            &Point3::new(r*cam_x.sin()*cam_y.cos(), r * 1. *cam_y.sin(), r * cam_x.cos()*cam_y.cos()),
             &Point3::origin(),
             &Vector3::new(0., 1., 0.),
         )
@@ -184,6 +183,7 @@ impl Render {
         .into();
 
         // draw points
+        let mut target = self.display.draw();
         target.clear_color_and_depth((0.0, 0.0, 0.0, 1.0), 1.0);
         let vb = self.vertex_buffer.as_ref().expect("Vertex Buffer unset.");
         target

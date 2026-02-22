@@ -18,7 +18,7 @@ use glium::winit::event::WindowEvent as WindowEventType;
 use glium::winit::keyboard::Key;
 use glium::winit::keyboard::NamedKey;
 
-const RDEPTH: i32 = 14;
+const RDEPTH: i32 = 10;
 
 fn main() {
     let now = SystemTime::now();
@@ -37,8 +37,10 @@ fn main() {
     let mut cam_x = 0.0;
     let mut cam_y = 0.0;
     let mut taa = true;
+    let mut rotation = true;
 
     render.set_vertex_buffer(points);
+
 
     #[allow(deprecated)]
     event_loop
@@ -52,6 +54,7 @@ fn main() {
                     ..
                 } => match logical_key {
                     Key::Named(NamedKey::Escape) => window_target.exit(),
+                    Key::Named(NamedKey::Space) => rotation = !rotation,
                     Key::Character(s) => match s.as_str() {
                         "w" => cam_y += 0.1,
                         "a" => cam_x -= 0.1,
@@ -64,7 +67,7 @@ fn main() {
                 },
                 WindowEventType::RedrawRequested => {
                     let current_time = now.elapsed().unwrap_or_default().as_millis() as f32;
-                    render.draw(cam_x, cam_y, current_time, taa);
+                    render.draw(cam_x, cam_y, if rotation {current_time} else {0.}, taa);
                     window.request_redraw();
                 }
                 _ => (),
