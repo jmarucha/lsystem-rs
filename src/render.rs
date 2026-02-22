@@ -1,8 +1,9 @@
 use glium::{
-    Program, Surface, VertexBuffer, backend::glutin::Display, glutin::surface::WindowSurface,
-    index::NoIndices,
+    BlitTarget, Program, Rect, Surface, Texture2d, VertexBuffer, backend::glutin::Display, glutin::surface::WindowSurface, index::NoIndices, program::Uniform, uniforms::{AsUniformValue, EmptyUniforms}
 };
 use nalgebra::{Isometry3, Perspective3, Point3, Vector3};
+use rand::{prelude::*, random_range};
+use glium::uniforms::MagnifySamplerFilter::Nearest;
 
 use crate::glue::points_to_vertices;
 
@@ -12,15 +13,31 @@ pub struct Vertex {
 }
 implement_vertex!(Vertex, position);
 
+#[derive(Copy, Clone)]
+pub struct Vertex2d {
+    pub position: [f32; 2],
+}
+implement_vertex!(Vertex2d, position);
+
 pub struct Render {
     display: Display<WindowSurface>,
     indices: NoIndices,
     program: Program,
     vertex_buffer: Option<VertexBuffer<Vertex>>,
+    previous_frame: Texture2d,
+    target_frame: Texture2d,
+    blend_program: Program,
+    full_screen_quad: VertexBuffer<Vertex2d>
 }
 
 impl Render {
     pub fn init_render(display: Display<WindowSurface>) -> Self {
+        let (w, h) = display.get_framebuffer_dimensions();
+
+        let target_frame = glium::Texture2d::empty(&display, w, h).unwrap();
+        let previous_frame = glium::Texture2d::empty(&display, w, h).unwrap();
+
+
         let indices = glium::index::NoIndices(glium::index::PrimitiveType::LinesList);
 
         let vertex_shader_src = r#"
@@ -40,10 +57,12 @@ impl Render {
                 }
             uniform mat4 pmatrix;
             uniform mat4 camera;
+            uniform vec2 taa_offset;
 
             void main() {
                 vec4 new_position = pmatrix*camera*vec4(rotate2d(current_time/1000) * position, 1.0);
                 new_position.y = new_position.y - 3.;
+                new_position.xy += taa_offset;
                 gl_Position = new_position;
                 c = exp(4.0 - new_position.z)/2;
             }
@@ -53,24 +72,69 @@ impl Render {
             #version 140
             in float c;
             out vec4 color;
-            // uniform vec3 csetting;
+
+            uniform vec3 primary_c;
+            uniform vec3 highlight_c;
 
             void main() {
                 float intensity = clamp(c,0,1);
                 float light = clamp((c-1),0,1); 
-                color = vec4(light, intensity, 0., 1.0);
+                color = vec4(
+                    (1-light)*intensity*primary_c+light*highlight_c, 1.0
+                );
             }
         "#;
 
         let program =
             glium::Program::from_source(&display, vertex_shader_src, fragment_shader_src, None)
                 .unwrap();
+        
+        let blend_program = Program::from_source(
+            &display,
+            r#"
+            #version 140
+            in vec2 position;
+            out vec2 pos;
+
+            void main() {
+                pos = (position-vec2(1,1))/2;
+                gl_Position = vec4(position, 0., 1.);
+            }
+
+            "#, r#"
+            #version 140
+            uniform sampler2D target_frame;
+            uniform sampler2D previous_frame;
+
+            in vec2 pos;
+            out vec4 color;
+            void main() {
+                vec4 target_frame_col = texture(target_frame, pos);
+                vec4 previous_frame_col = texture(previous_frame, pos);
+                color = 0.2*target_frame_col+0.8*previous_frame_col;
+            }
+            "#, None).unwrap();
+
+        let full_screen_quad_vertices = [
+            Vertex2d { position: [1., -1.]},
+            Vertex2d { position: [-1., -1.]},
+            Vertex2d { position: [1., 1.]},
+            Vertex2d { position: [-1., -1.]},
+            Vertex2d { position: [1., 1.]},
+            Vertex2d { position: [-1., 1.]},
+        ];
+        let full_screen_quad = glium::VertexBuffer::new(&display,
+            &full_screen_quad_vertices).unwrap();
 
         Render {
             display,
             indices,
             program,
             vertex_buffer: None,
+            previous_frame,
+            target_frame,
+            blend_program,
+            full_screen_quad,
         }
     }
 
@@ -81,7 +145,7 @@ impl Render {
         self
     }
 
-    pub fn draw(self: &Self, _cam_x: f32, cam_y: f32, current_time: f32) -> &Self {
+    pub fn draw(self: &Self, _cam_x: f32, cam_y: f32, current_time: f32, taa: bool) -> &Self {
         let params = glium::DrawParameters {
             depth: glium::Depth {
                 test: glium::draw_parameters::DepthTest::IfLess,
@@ -92,8 +156,16 @@ impl Render {
         };
         // draw
         let mut target = self.display.draw();
+
+        let (width, height) = target.get_dimensions();
+        let dx = 1. / width as f32;
+        let dy = 1. / height as f32;
+        let taa_offset = [
+            random_range(-dx..dx),
+            random_range(-dy..dy)
+        ];
+
         let perspective: [[f32; 4]; 4] = {
-            let (width, height) = target.get_dimensions();
             let aspect_ratio = height as f32 / width as f32;
             Perspective3::new(1. / aspect_ratio, 3.141 / 6.0, 0.1, 10.0)
                 .into_inner()
@@ -110,6 +182,7 @@ impl Render {
         .to_homogeneous()
         .into();
 
+        // draw points
         target.clear_color_and_depth((0.0, 0.0, 0.0, 1.0), 1.0);
         let vb = self.vertex_buffer.as_ref().expect("Vertex Buffer unset.");
         target
@@ -118,14 +191,46 @@ impl Render {
                 &self.indices,
                 &self.program,
                 &uniform! {
+                    // current_time: 0.0f32,
                     current_time: current_time,
                     pmatrix: perspective,
-                    camera: camera
+                    camera: camera,
+                    primary_c: [1.,0.,0.] as [f32; _],
+                    highlight_c: [0.8, 1., 0.0f32] as [f32; _],
+                    taa_offset: if taa {taa_offset} else {[0., 0.]},
                 },
                 &params,
             )
             .unwrap();
+
+        // TAA
+        if taa {
+        self.target_frame.as_surface().blit_from_frame(
+            &Rect {left: 0, bottom: 0, width, height},
+            &BlitTarget {left: 0, bottom: 0, width: width as i32, height: height as i32},
+        Nearest);
+
+        target.clear_color(0.0, 0.0, 0.0, 1.0);
+        target.draw(
+            &self.full_screen_quad,
+            &glium::index::NoIndices(glium::index::PrimitiveType::TrianglesList),
+            &self.blend_program,
+            &uniform! {
+                target_frame: &self.target_frame,
+                previous_frame: &self.previous_frame
+            },
+            &Default::default(),
+        ).unwrap();
+        }
+
+
+        self.previous_frame.as_surface().blit_from_frame(
+            &Rect {left: 0, bottom: 0, width, height},
+            &BlitTarget {left: 0, bottom: 0, width: width as i32, height: height as i32},
+        Nearest);
+
         target.finish().unwrap();
+
         self
     }
 }
