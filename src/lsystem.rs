@@ -4,32 +4,32 @@ extern crate nalgebra as na;
 use std::collections::VecDeque;
 use std::f32::consts::PI;
 
-use na::{Affine3, Point3, Rotation3, Scale3, Translation3};
+use na::{Affine3, Point3, RealField, Rotation3, Scale3, Translation3};
 
 // todo - generalize type
-pub fn get_transformation_matrix(
-    rot: &Rotation3<f32>,
-    trans: &Translation3<f32>,
-    scale: &Scale3<f32>,
-) -> Affine3<f32> {
-    let rot_c: Affine3<f32> = na::convert_ref(rot);
-    let trans_c: Affine3<f32> = na::convert_ref(trans);
-    let scale_c: Affine3<f32> = na::convert_ref(scale);
+pub fn get_transformation_matrix<T: RealField>(
+    rot: &Rotation3<T>,
+    trans: &Translation3<T>,
+    scale: &Scale3<T>,
+) -> Affine3<T> {
+    let rot_c: Affine3<T> = na::convert_ref(rot);
+    let trans_c: Affine3<T> = na::convert_ref(trans);
+    let scale_c: Affine3<T> = na::convert_ref(scale);
     rot_c * scale_c * trans_c
 }
 
-pub fn _get_2d_transformation(rot: f32, scale: f32) -> Affine3<f32> {
+pub fn _get_2d_transformation<T: From<f32> + RealField + Copy>(rot: T, scale: T) -> Affine3<T> {
     get_transformation_matrix(
-        &Rotation3::from_euler_angles(0., 0.0, rot),
-        &Translation3::new(0., 1., 0.),
+        &Rotation3::from_euler_angles(From::from(0.0), From::from(0.0), rot),
+        &Translation3::new(From::from(0.), From::from(1.), From::from(0.)),
         &Scale3::new(scale, scale, scale),
     )
 }
 
-pub fn _get_2dd_transformation(rot: f32, scale: f32) -> Affine3<f32> {
+pub fn _get_2dd_transformation<T: From<f32> + RealField + Copy>(rot: T, scale: T) -> Affine3<T> {
     get_transformation_matrix(
-        &Rotation3::from_euler_angles(0., PI/2., rot),
-        &Translation3::new(0., 1., 0.),
+        &Rotation3::from_euler_angles(From::from(0.0), From::from(PI / 2.0), rot),
+        &Translation3::new(From::from(0.), From::from(1.), From::from(0.)),
         &Scale3::new(scale, scale, scale),
     )
 }

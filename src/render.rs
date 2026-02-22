@@ -22,7 +22,6 @@ pub struct Render {
 impl Render {
     pub fn init_render(display: Display<WindowSurface>) -> Self {
         let indices = glium::index::NoIndices(glium::index::PrimitiveType::LinesList);
-        //let indices = glium::index::NoIndices(glium::index::PrimitiveType::Points);
 
         let vertex_shader_src = r#"
             #version 140
@@ -75,13 +74,14 @@ impl Render {
         }
     }
 
-    pub fn set_vertex_buffer(self: &mut Self, points: Vec<Point3<f32>>) -> () {
+    pub fn set_vertex_buffer(self: &mut Self, points: Vec<Point3<f32>>) -> &mut Self {
         let shape = points_to_vertices(points);
         let vertex_buffer = glium::VertexBuffer::new(&self.display, &shape).unwrap();
         self.vertex_buffer = Some(vertex_buffer);
+        self
     }
 
-    pub fn draw(self: &Self, _cam_x: f32, cam_y: f32, current_time: f32) -> () {
+    pub fn draw(self: &Self, _cam_x: f32, cam_y: f32, current_time: f32) -> &Self {
         let params = glium::DrawParameters {
             depth: glium::Depth {
                 test: glium::draw_parameters::DepthTest::IfLess,
@@ -100,7 +100,7 @@ impl Render {
                 .into()
         };
 
-        let r = 5.;
+        let r = 4.;
 
         let camera: [[f32; 4]; 4] = Isometry3::look_at_rh(
             &Point3::new(0., r * cam_y.sin(), r * cam_y.cos()),
@@ -109,7 +109,6 @@ impl Render {
         )
         .to_homogeneous()
         .into();
-        println!("{:?}", camera);
 
         target.clear_color_and_depth((0.0, 0.0, 0.0, 1.0), 1.0);
         let vb = self.vertex_buffer.as_ref().expect("Vertex Buffer unset.");
@@ -127,5 +126,6 @@ impl Render {
             )
             .unwrap();
         target.finish().unwrap();
+        self
     }
 }
