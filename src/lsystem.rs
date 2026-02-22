@@ -1,7 +1,7 @@
 // rotate - move - scale - rotate
 
 extern crate nalgebra as na;
-use std::{collections::VecDeque, iter::zip};
+use std::collections::VecDeque;
 use std::f32::consts::PI;
 
 use na::{Affine3, Point3, Rotation3, Scale3, Translation3};
@@ -34,7 +34,6 @@ pub fn _get_2dd_transformation(rot: f32, scale: f32) -> Affine3<f32> {
     )
 }
 
-
 #[allow(dead_code)]
 pub fn get_points_bfs(transformations: &[Affine3<f32>], max_depth: i32) -> Vec<Point3<f32>> {
     // somewhere around 2-4x slower than DFS
@@ -59,15 +58,18 @@ pub fn get_points_bfs(transformations: &[Affine3<f32>], max_depth: i32) -> Vec<P
 }
 
 #[allow(dead_code)]
-pub fn get_points_batched<const N: usize>(transformations: &[Affine3<f32>; N], max_depth: i32) -> Vec<Point3<f32>> {
+pub fn get_points_batched<const N: usize>(
+    transformations: &[Affine3<f32>; N],
+    max_depth: i32,
+) -> Vec<Point3<f32>> {
     // was aiming batching operations, actually sucks performance-wise (6-10x worse dhan DFS)
     let mut output: Vec<Point3<f32>> = Vec::new();
-    let mut queues: [VecDeque<(Affine3<f32>, i32)>; N] = [const {VecDeque::new()}; N];
+    let mut queues: [VecDeque<(Affine3<f32>, i32)>; N] = [const { VecDeque::new() }; N];
     for q in &mut queues {
         q.push_back((Affine3::identity(), max_depth));
     }
 
-    while !(queues.iter().all(|q|-> bool { q.is_empty() })) {
+    while !(queues.iter().all(|q| -> bool { q.is_empty() })) {
         for i in 0..N {
             while !queues[i].is_empty() {
                 let (old_trans, rdepth) = queues[i].pop_back().unwrap();
@@ -84,8 +86,6 @@ pub fn get_points_batched<const N: usize>(transformations: &[Affine3<f32>; N], m
     }
     output
 }
-
-
 
 pub fn get_points_dfs(transformations: &[Affine3<f32>], max_depth: i32) -> Vec<Point3<f32>> {
     let mut output: Vec<Point3<f32>> = Vec::new();
@@ -108,15 +108,12 @@ pub fn get_points_dfs(transformations: &[Affine3<f32>], max_depth: i32) -> Vec<P
     output
 }
 
-
-
-
 pub fn test_actually_nice_tree() -> [Affine3<f32>; 5] {
     [
-        _get_2dd_transformation(3. * PI / 4., 0.5),
-        _get_2dd_transformation(-PI / 4., 0.6),
-        _get_2dd_transformation(0., 0.7),
-        _get_2dd_transformation(PI/2., 0.3),
-        _get_2d_transformation(-PI / 2., 0.3)
+        _get_2d_transformation(3. * PI / 4., 0.5),
+        _get_2d_transformation(-PI / 4., 0.6),
+        _get_2dd_transformation(0., 0.5),
+        _get_2d_transformation(PI / 2., 0.3),
+        _get_2d_transformation(-PI / 2., 0.3),
     ]
 }

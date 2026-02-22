@@ -1,6 +1,6 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use lsystem::{get_points_bfs, get_points_dfs, get_points_batched};
+use criterion::{Criterion, black_box, criterion_group, criterion_main};
 use lsystem::test_actually_nice_tree;
+use lsystem::{get_points_batched, get_points_bfs, get_points_dfs};
 
 fn benchmark_get_points_bfs(c: &mut Criterion) {
     c.bench_function("get_points_bfs_depth_5", |b| {
@@ -71,5 +71,10 @@ fn benchmark_get_points_batched(c: &mut Criterion) {
     });
 }
 
-criterion_group!(benches, benchmark_get_points_bfs, benchmark_get_points_dfs, benchmark_get_points_batched);
+criterion_group!(
+    benches,
+    benchmark_get_points_bfs,
+    benchmark_get_points_dfs,
+    benchmark_get_points_batched
+);
 criterion_main!(benches);
