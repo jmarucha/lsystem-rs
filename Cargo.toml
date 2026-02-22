@@ -6,3 +6,10 @@ edition = "2024"
 [dependencies]
 nalgebra = "0.34.1"
 glium = "0.36"
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[[bench]]
+name = "tree_gen"
+harness = false

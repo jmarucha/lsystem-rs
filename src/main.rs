@@ -4,7 +4,7 @@ mod render;
 
 use std::time::SystemTime;
 
-use crate::lsystem::get_points_bfs;
+use crate::lsystem::get_points_dfs;
 use crate::lsystem::test_actually_nice_tree;
 
 #[macro_use]
@@ -17,7 +17,7 @@ use glium::winit::event::WindowEvent as WindowEventType;
 use glium::winit::keyboard::Key;
 use glium::winit::keyboard::NamedKey;
 
-const RDEPTH: i32 = 10;
+const RDEPTH: i32 = 11;
 
 fn main() {
     let now = SystemTime::now();
@@ -30,7 +30,7 @@ fn main() {
         .with_inner_size(1920, 1080)
         .build(&event_loop);
 
-    let points = get_points_bfs(&test_actually_nice_tree(), RDEPTH);
+    let points = get_points_dfs(&test_actually_nice_tree(), RDEPTH);
     let mut render = Render::init_render(display);
 
     let mut cam_x = 0.0;
