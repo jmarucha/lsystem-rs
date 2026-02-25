@@ -1,5 +1,5 @@
 name: Cargo Build & Test
-# from the cargo Book
+# from the cargo Book      - name: Cache
 on:
   push:
   pull_request:
@@ -17,5 +17,14 @@ jobs:
           - stable
     steps:
       - uses: actions/checkout@v4
+      - name: Cache
+        uses: actions/cache@v5.0.3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       - run: rustup update ${{ matrix.toolchain }} && rustup default ${{ matrix.toolchain }}
       - run: cargo build --release
+
