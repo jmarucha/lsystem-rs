@@ -40,7 +40,7 @@ jobs:
       - name: Upload release artifact
         uses: actions/upload-artifact@v4
         with:
-          name: lsystem-rs
+          name: lsystem-rs-${{ matrix.target }}
           path: target/${{ matrix.target }}/${{ matrix.build_profile }}/lsystem${{ matrix.target == 'x86_64-pc-windows-gnu' && '.exe' || '' }}
           
   release:
@@ -48,10 +48,15 @@ jobs:
     needs: [build]
     runs-on: ubuntu-latest
     steps:
-    - name: Download release artifact
+    - name: Download release artifact (Windows)
       uses: actions/download-artifact@v5
       with:
-        name: lsystem-rs
+        name: lsystem-rs-x86_64-pc-windows-gnu
+        path: ./lsystem.exe
+    - name: Download release artifact (Linux)
+      uses: actions/download-artifact@v5
+      with:
+        name: lsystem-rs-x86_64-unknown-linux-gnu
         path: ./lsystem
     - run: |
         gh release create --generate-notes ./<my-app>/<my-project>#<my-app>
