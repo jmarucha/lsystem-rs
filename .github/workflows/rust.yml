@@ -36,7 +36,6 @@ jobs:
       - run: rustup update ${{ matrix.toolchain }} && rustup default ${{ matrix.toolchain }}
       - run: rustup target add ${{ matrix.target }}
       - run: cargo build --profile ${{ matrix.build_profile }} --target ${{ matrix.target }}
-      - run: ls -R target
       - name: Upload release artifact
         uses: actions/upload-artifact@v4
         with:
@@ -59,4 +58,4 @@ jobs:
         name: lsystem-rs-x86_64-unknown-linux-gnu
         path: ./lsystem
     - run: |
-        gh release create --generate-notes ./<my-app>/<my-project>#<my-app>
+        gh release create --generate-notes "CI Build" -p
