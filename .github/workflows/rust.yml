@@ -32,18 +32,20 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       - name: Install mingw
         run: sudo apt install -y mingw-w64
+        if: ${{ matrix.target == 'x86_64-pc-windows-gnu' }}
       - run: rustup update ${{ matrix.toolchain }} && rustup default ${{ matrix.toolchain }}
-      - run: rustup target add x86_64-pc-windows-gnu
+      - run: rustup target ${{ matrix.target }}
       - run: cargo build --profile ${{ matrix.build_profile }}
       - run: ls -R target
       - name: Upload release artifact
         uses: actions/upload-artifact@v4
         with:
           name: lsystem-rs
-          path: target/${{ matrix.target }}/${{ matrix.build_profile }}/lsystem${{ matrix.target == 'x86_64-pc-windows-gnu' && '.exe' || '' }}
+          path: target/${{ matrix.build_profile }}/lsystem${{ matrix.target == 'x86_64-pc-windows-gnu' && '.exe' || '' }}
           
   release:
     name: Release binaries
+    needs: [build]
     runs-on: ubuntu-latest
     steps:
     - name: Download release artifact
