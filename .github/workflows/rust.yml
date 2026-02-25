@@ -15,6 +15,11 @@ jobs:
       matrix:
         toolchain:
           - stable
+        build_profile:
+          - release
+        target:
+          - x86_64-pc-windows-gnu
+          - x86_64-unknown-linux-gnu
     steps:
       - uses: actions/checkout@v4
       - name: Cache
@@ -25,6 +30,25 @@ jobs:
             ~/.cargo/git
             target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - name: Install mingw
+        run: sudo apt install -y mingw-w64
       - run: rustup update ${{ matrix.toolchain }} && rustup default ${{ matrix.toolchain }}
-      - run: cargo build --release
-
+      - run: rustup target add x86_64-pc-windows-gnu
+      - run: cargo build --profile ${{ matrix.build_profile }}
+      - name: Upload release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: lsystem-rs
+          path: target/${{ matrix.target }}/${{ matrix.build_profile }}/lsystem${{ matrix.target == 'x86_64-pc-windows-gnu' && '.exe' || '' }}
+          
+  release:
+    name: Release binaries
+    runs-on: ubuntu-latest
+    steps:
+    - name: Download release artifact
+      uses: actions/download-artifact@v5
+      with:
+        name: lsystem-rs
+        path: ./lsystem
+    - run: |
+        gh release create --generate-notes ./<my-app>/<my-project>#<my-app>
