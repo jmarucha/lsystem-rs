@@ -19,6 +19,8 @@ use glium::winit::event::KeyEvent;
 use glium::winit::event::WindowEvent as WindowEventType;
 use glium::winit::keyboard::Key;
 use glium::winit::keyboard::NamedKey;
+use nalgebra::Point1;
+use nalgebra::partial_max;
 
 const RDEPTH: i32 = 10;
 
@@ -36,13 +38,15 @@ fn main() {
     let mut render = Render::init_render(display);
     {
         let points = get_points_dfs(&generate_tree(TreeType::RandomTree), RDEPTH);
-        render.set_vertex_buffer(points);
+        render.set_points(points);
     }
 
     let mut cam_x = 0.0;
     let mut cam_y = 0.0;
     let mut taa = false;
     let mut rotation = true;
+
+    println!("{:?}", partial_max(&Point1::new(0.1), &Point1::new(0.2)));
 
 
     #[allow(deprecated)]
@@ -71,7 +75,7 @@ fn main() {
                         "q" => taa = !taa,
                         "p" => {
                             let points = get_points_dfs(&generate_tree(TreeType::RandomTree), RDEPTH);
-                            render.set_vertex_buffer(points);
+                            render.set_points(points);
                         }
                         _ => (),
                     },

@@ -152,7 +152,7 @@ impl Render {
         }
     }
 
-    pub fn set_vertex_buffer(self: &mut Self, points: Vec<Point3<f32>>) -> &mut Self {
+    pub fn set_points(self: &mut Self, points: Vec<Point3<f32>>) -> &mut Self {
         let shape = points_to_vertices(points);
         let vertex_buffer = VertexBuffer::new(&self.display, &shape).unwrap();
         self.vertex_buffer = Some(vertex_buffer);
