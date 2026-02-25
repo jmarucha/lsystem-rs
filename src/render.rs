@@ -1,3 +1,5 @@
+use std::f32::consts::PI;
+
 use glium::uniforms::MagnifySamplerFilter::Nearest;
 use glium::{
     BlitTarget, Program, Rect, Surface, Texture2d, VertexBuffer,
@@ -156,9 +158,13 @@ impl Render {
         }
     }
 
-    pub fn set_points(self: &mut Self, points: Vec<Point3<f32>>) -> &mut Self {
-        let bbox_min = points.iter().fold(Point3::origin(), |x,y| Point3::inf(&x,y) );
-        let bbox_max = points.iter().fold(Point3::origin(), |x,y| Point3::sup(&x,y) );
+    pub fn set_points(&mut self, points: Vec<Point3<f32>>) -> &mut Self {
+        let bbox_min = points
+            .iter()
+            .fold(Point3::origin(), |x, y| Point3::inf(&x, y));
+        let bbox_max = points
+            .iter()
+            .fold(Point3::origin(), |x, y| Point3::sup(&x, y));
         self.origin = Some(bbox_max.lerp(&bbox_min, 0.5));
 
         let shape = points_to_vertices(points);
@@ -167,7 +173,7 @@ impl Render {
         self
     }
 
-    pub fn draw(self: &Self, cam_x: f32, cam_y: f32, current_time: f32, taa: bool) -> &Self {
+    pub fn draw(&self, cam_x: f32, cam_y: f32, current_time: f32, taa: bool) -> &Self {
         let params = glium::DrawParameters {
             depth: glium::Depth {
                 test: glium::draw_parameters::DepthTest::IfLess,
@@ -186,7 +192,7 @@ impl Render {
 
         let perspective: [[f32; 4]; 4] = {
             let aspect_ratio = height as f32 / width as f32;
-            Perspective3::new(1. / aspect_ratio, 3.141 / 6.0, 0.1, 10.0)
+            Perspective3::new(1. / aspect_ratio, PI / 6.0, 0.1, 10.0)
                 .into_inner()
                 .into()
         };
@@ -212,7 +218,7 @@ impl Render {
         target
             .draw(
                 vb,
-                &self.indices,
+                self.indices,
                 &self.program,
                 &uniform! {
                     // current_time: 0.0f32,
@@ -250,7 +256,7 @@ impl Render {
             target
                 .draw(
                     &self.full_screen_quad,
-                    &NoIndices(PrimitiveType::TrianglesList),
+                    NoIndices(PrimitiveType::TrianglesList),
                     &self.blend_program,
                     &uniform! {
                         target_frame: &self.target_frame,

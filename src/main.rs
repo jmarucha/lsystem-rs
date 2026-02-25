@@ -7,7 +7,6 @@ use std::time::SystemTime;
 use crate::lsystem::TreeType;
 use crate::lsystem::generate_tree;
 use crate::lsystem::get_points_dfs;
-use crate::lsystem::test_actually_nice_tree;
 
 #[macro_use]
 extern crate glium;
@@ -19,11 +18,8 @@ use glium::winit::event::KeyEvent;
 use glium::winit::event::WindowEvent as WindowEventType;
 use glium::winit::keyboard::Key;
 use glium::winit::keyboard::NamedKey;
-use nalgebra::Point1;
-use nalgebra::Point2;
-use nalgebra::partial_max;
 
-const RDEPTH: i32 = 10;
+const RDEPTH: i32 = 13;
 
 fn main() {
     let now = SystemTime::now();
@@ -46,7 +42,6 @@ fn main() {
     let mut cam_y = 0.0;
     let mut taa = false;
     let mut rotation = true;
-
 
     #[allow(deprecated)]
     event_loop
@@ -73,7 +68,8 @@ fn main() {
                         "d" => cam_x += 0.1,
                         "q" => taa = !taa,
                         "p" => {
-                            let points = get_points_dfs(&generate_tree(TreeType::RandomTree), RDEPTH);
+                            let points =
+                                get_points_dfs(&generate_tree(TreeType::RandomTree), RDEPTH);
                             render.set_points(points);
                         }
                         _ => (),

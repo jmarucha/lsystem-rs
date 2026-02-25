@@ -1,8 +1,8 @@
 // rotate - move - scale - rotate
 
 extern crate nalgebra as na;
+use std::collections::VecDeque;
 use std::f32::consts::PI;
-use std::{collections::VecDeque, hash::RandomState};
 
 use na::{Affine3, Point3, RealField, Rotation3, Scale3, Translation3};
 use rand::random;
@@ -109,6 +109,7 @@ pub fn get_points_dfs(transformations: &[Affine3<f32>], max_depth: i32) -> Vec<P
     output
 }
 
+#[allow(unused)]
 pub fn test_actually_nice_tree() -> [Affine3<f32>; 3] {
     [
         _get_2dd_transformation(-PI / 4., 0.5),
