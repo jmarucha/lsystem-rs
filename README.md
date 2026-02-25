@@ -8,7 +8,11 @@ This project implements an interactive 3D tree generator that creates realistic 
 
 ## Images
 
-
+![Fractal 1](/screenshots/1.png)
+![Fractal 2](/screenshots/2.png)
+![Fractal 3](/screenshots/3.png)
+![Fractal 4](/screenshots/4.png)
+![Fractal 5](/screenshots/5.png)
 
 ## Features
 
