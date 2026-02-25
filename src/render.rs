@@ -173,6 +173,13 @@ impl Render {
         self
     }
 
+    pub fn resize_buffers(&mut self) -> &mut Self {
+        let (width, height) = self.display.get_framebuffer_dimensions();
+        self.target_frame = Texture2d::empty(&self.display, width, height).unwrap();
+        self.previous_frame = Texture2d::empty(&self.display, width, height).unwrap();
+        self
+    }
+
     pub fn draw(&self, cam_x: f32, cam_y: f32, current_time: f32, taa: bool) -> &Self {
         let params = glium::DrawParameters {
             depth: glium::Depth {

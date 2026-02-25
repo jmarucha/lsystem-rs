@@ -18,6 +18,7 @@ use glium::winit::event::KeyEvent;
 use glium::winit::event::WindowEvent as WindowEventType;
 use glium::winit::keyboard::Key;
 use glium::winit::keyboard::NamedKey;
+use glium::winit::window::Fullscreen;
 
 #[cfg(debug_assertions)]
 const RDEPTH: i32 = 10;
@@ -49,42 +50,61 @@ fn main() {
 
     #[allow(deprecated)]
     event_loop
-        .run(move |ev, window_target| if let WindowEvent { event, .. } = ev { match event {
-            WindowEventType::CloseRequested => {
-                window_target.exit();
-            }
-            WindowEventType::KeyboardInput {
-                event:
-                    KeyEvent {
-                        logical_key,
-                        state: ElementState::Pressed,
+        .run(move |ev, window_target| {
+            if let WindowEvent { event, .. } = ev {
+                match event {
+                    WindowEventType::CloseRequested => {
+                        window_target.exit();
+                    }
+                    WindowEventType::KeyboardInput {
+                        event:
+                            KeyEvent {
+                                logical_key,
+                                state: ElementState::Pressed,
+                                ..
+                            },
                         ..
+                    } => match logical_key {
+                        Key::Named(NamedKey::Escape) => window_target.exit(),
+                        Key::Named(NamedKey::Space) => rotation = !rotation,
+                        Key::Character(s) => match s.as_str() {
+                            "w" => cam_y += 0.1,
+                            "a" => cam_x -= 0.1,
+                            "s" => cam_y -= 0.1,
+                            "d" => cam_x += 0.1,
+                            "q" => {
+                                taa = !taa;
+                                if taa {
+                                    render.resize_buffers();
+                                }
+                            }
+                            "n" => {
+                                let points =
+                                    get_points_dfs(&generate_tree(TreeType::RandomTree), RDEPTH);
+                                render.set_points(points);
+                            }
+                            "f" => match window.fullscreen() {
+                                None => {
+                                    window.set_fullscreen(Some(Fullscreen::Borderless(None)));
+                                    window.set_cursor_visible(false);
+                                }
+                                Some(_) => {
+                                    window.set_fullscreen(None);
+                                    window.set_cursor_visible(true);
+                                }
+                            },
+                            _ => (),
+                        },
+                        _ => (),
                     },
-                ..
-            } => match logical_key {
-                Key::Named(NamedKey::Escape) => window_target.exit(),
-                Key::Named(NamedKey::Space) => rotation = !rotation,
-                Key::Character(s) => match s.as_str() {
-                    "w" => cam_y += 0.1,
-                    "a" => cam_x -= 0.1,
-                    "s" => cam_y -= 0.1,
-                    "d" => cam_x += 0.1,
-                    "q" => taa = !taa,
-                    "n" => {
-                        let points =
-                            get_points_dfs(&generate_tree(TreeType::RandomTree), RDEPTH);
-                        render.set_points(points);
+                    WindowEventType::RedrawRequested => {
+                        let current_time = now.elapsed().unwrap_or_default().as_millis() as f32;
+                        render.draw(cam_x, cam_y, if rotation { current_time } else { 0. }, taa);
+                        window.request_redraw();
                     }
                     _ => (),
-                },
-                _ => (),
-            },
-            WindowEventType::RedrawRequested => {
-                let current_time = now.elapsed().unwrap_or_default().as_millis() as f32;
-                render.draw(cam_x, cam_y, if rotation { current_time } else { 0. }, taa);
-                window.request_redraw();
+                }
             }
-            _ => (),
-        } })
+        })
         .unwrap();
 }
