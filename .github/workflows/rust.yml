@@ -35,13 +35,13 @@ jobs:
         if: ${{ matrix.target == 'x86_64-pc-windows-gnu' }}
       - run: rustup update ${{ matrix.toolchain }} && rustup default ${{ matrix.toolchain }}
       - run: rustup target add ${{ matrix.target }}
-      - run: cargo build --profile ${{ matrix.build_profile }}
+      - run: cargo build --profile ${{ matrix.build_profile }} --target ${{ matrix.target }}
       - run: ls -R target
       - name: Upload release artifact
         uses: actions/upload-artifact@v4
         with:
           name: lsystem-rs
-          path: target/${{ matrix.build_profile }}/lsystem${{ matrix.target == 'x86_64-pc-windows-gnu' && '.exe' || '' }}
+          path: target/${{ matrix.target }}/${{ matrix.build_profile }}/lsystem${{ matrix.target == 'x86_64-pc-windows-gnu' && '.exe' || '' }}
           
   release:
     name: Release binaries
