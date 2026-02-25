@@ -1,10 +1,12 @@
+use glium::uniforms::MagnifySamplerFilter::Nearest;
 use glium::{
     BlitTarget, Program, Rect, Surface, Texture2d, VertexBuffer,
-    backend::glutin::Display, glutin::surface::WindowSurface, index::{NoIndices, PrimitiveType}
+    backend::glutin::Display,
+    glutin::surface::WindowSurface,
+    index::{NoIndices, PrimitiveType},
 };
 use nalgebra::{Isometry3, Perspective3, Point3, Vector3};
 use rand::random_range;
-use glium::uniforms::MagnifySamplerFilter::Nearest;
 
 use crate::glue::points_to_vertices;
 
@@ -28,7 +30,7 @@ pub struct Render {
     previous_frame: Texture2d,
     target_frame: Texture2d,
     blend_program: Program,
-    full_screen_quad: VertexBuffer<Vertex2d>
+    full_screen_quad: VertexBuffer<Vertex2d>,
 }
 
 impl Render {
@@ -37,7 +39,6 @@ impl Render {
 
         let target_frame = Texture2d::empty(&display, w, h).unwrap();
         let previous_frame = Texture2d::empty(&display, w, h).unwrap();
-
 
         let indices = NoIndices(PrimitiveType::LinesList);
 
@@ -62,7 +63,7 @@ impl Render {
 
             void main() {
                 vec4 new_position = pmatrix*camera*vec4(rotate2d(current_time/1000) * position, 1.0);
-                new_position.y = new_position.y - 3.;
+                // new_position.y = new_position.y - 3.;
                 new_position.xy += taa_offset;
                 gl_Position = new_position;
                 c = exp(4.0 - new_position.z)/2;
@@ -87,9 +88,8 @@ impl Render {
         "#;
 
         let program =
-            Program::from_source(&display, vertex_shader_src, fragment_shader_src, None)
-                .unwrap();
-        
+            Program::from_source(&display, vertex_shader_src, fragment_shader_src, None).unwrap();
+
         let blend_program = Program::from_source(
             &display,
             r#"
@@ -102,7 +102,8 @@ impl Render {
                 gl_Position = vec4(position, 0., 1.);
             }
 
-            "#, r#"
+            "#,
+            r#"
             #version 140
             uniform sampler2D target_frame;
             uniform sampler2D previous_frame;
@@ -116,18 +117,28 @@ impl Render {
                 color = t*target_frame_col+(1-t)*previous_frame_col-0.00390625*vec4(1,1,1,0);
 
             }
-            "#, None).unwrap();
+            "#,
+            None,
+        )
+        .unwrap();
 
         let full_screen_quad_vertices = [
-            Vertex2d { position: [1., -1.]},
-            Vertex2d { position: [-1., -1.]},
-            Vertex2d { position: [1., 1.]},
-            Vertex2d { position: [-1., -1.]},
-            Vertex2d { position: [1., 1.]},
-            Vertex2d { position: [-1., 1.]},
+            Vertex2d {
+                position: [1., -1.],
+            },
+            Vertex2d {
+                position: [-1., -1.],
+            },
+            Vertex2d { position: [1., 1.] },
+            Vertex2d {
+                position: [-1., -1.],
+            },
+            Vertex2d { position: [1., 1.] },
+            Vertex2d {
+                position: [-1., 1.],
+            },
         ];
-        let full_screen_quad = VertexBuffer::new(&display,
-            &full_screen_quad_vertices).unwrap();
+        let full_screen_quad = VertexBuffer::new(&display, &full_screen_quad_vertices).unwrap();
 
         Render {
             display,
@@ -161,8 +172,8 @@ impl Render {
         let dx = 2. / width as f32;
         let dy = 2. / height as f32;
         let taa_offset = [
-            (random_range(-dx..dx)+random_range(-dx..dx))/2.,
-            (random_range(-dy..dy)+random_range(-dy..dy))/2.,
+            (random_range(-dx..dx) + random_range(-dx..dx)) / 2.,
+            (random_range(-dy..dy) + random_range(-dy..dy)) / 2.,
         ];
 
         let perspective: [[f32; 4]; 4] = {
@@ -175,7 +186,11 @@ impl Render {
         let r = 4.;
 
         let camera: [[f32; 4]; 4] = Isometry3::look_at_rh(
-            &Point3::new(r*cam_x.sin()*cam_y.cos(), r * 1. *cam_y.sin(), r * cam_x.cos()*cam_y.cos()),
+            &Point3::new(
+                r * cam_x.sin() * cam_y.cos(),
+                r * 1. * cam_y.sin(),
+                r * cam_x.cos() * cam_y.cos(),
+            ),
             &Point3::origin(),
             &Vector3::new(0., 1., 0.),
         )
@@ -206,29 +221,52 @@ impl Render {
 
         // TAA
         if taa {
-        self.target_frame.as_surface().blit_from_frame(
-            &Rect {left: 0, bottom: 0, width, height},
-            &BlitTarget {left: 0, bottom: 0, width: width as i32, height: height as i32},
-        Nearest);
+            self.target_frame.as_surface().blit_from_frame(
+                &Rect {
+                    left: 0,
+                    bottom: 0,
+                    width,
+                    height,
+                },
+                &BlitTarget {
+                    left: 0,
+                    bottom: 0,
+                    width: width as i32,
+                    height: height as i32,
+                },
+                Nearest,
+            );
 
-        target.clear_color(0.0, 0.0, 0.0, 1.0);
-        target.draw(
-            &self.full_screen_quad,
-            &NoIndices(PrimitiveType::TrianglesList),
-            &self.blend_program,
-            &uniform! {
-                target_frame: &self.target_frame,
-                previous_frame: &self.previous_frame
-            },
-            &Default::default(),
-        ).unwrap();
+            target.clear_color(0.0, 0.0, 0.0, 1.0);
+            target
+                .draw(
+                    &self.full_screen_quad,
+                    &NoIndices(PrimitiveType::TrianglesList),
+                    &self.blend_program,
+                    &uniform! {
+                        target_frame: &self.target_frame,
+                        previous_frame: &self.previous_frame
+                    },
+                    &Default::default(),
+                )
+                .unwrap();
         }
 
-
         self.previous_frame.as_surface().blit_from_frame(
-            &Rect {left: 0, bottom: 0, width, height},
-            &BlitTarget {left: 0, bottom: 0, width: width as i32, height: height as i32},
-        Nearest);
+            &Rect {
+                left: 0,
+                bottom: 0,
+                width,
+                height,
+            },
+            &BlitTarget {
+                left: 0,
+                bottom: 0,
+                width: width as i32,
+                height: height as i32,
+            },
+            Nearest,
+        );
 
         target.finish().unwrap();
 

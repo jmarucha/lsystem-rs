@@ -4,6 +4,8 @@ mod render;
 
 use std::time::SystemTime;
 
+use crate::lsystem::TreeType;
+use crate::lsystem::generate_tree;
 use crate::lsystem::get_points_dfs;
 use crate::lsystem::test_actually_nice_tree;
 
@@ -30,16 +32,17 @@ fn main() {
         .with_title("Trees")
         .with_inner_size(1920, 1080)
         .build(&event_loop);
-
-    let points = get_points_dfs(&test_actually_nice_tree(), RDEPTH);
+    // let points = get_points_dfs(&test_actually_nice_tree(), RDEPTH);
     let mut render = Render::init_render(display);
+    {
+        let points = get_points_dfs(&generate_tree(TreeType::RandomTree), RDEPTH);
+        render.set_vertex_buffer(points);
+    }
 
     let mut cam_x = 0.0;
     let mut cam_y = 0.0;
-    let mut taa = true;
+    let mut taa = false;
     let mut rotation = true;
-
-    render.set_vertex_buffer(points);
 
 
     #[allow(deprecated)]
@@ -50,7 +53,12 @@ fn main() {
                     window_target.exit();
                 }
                 WindowEventType::KeyboardInput {
-                    event: KeyEvent { logical_key, state: ElementState::Pressed, .. },
+                    event:
+                        KeyEvent {
+                            logical_key,
+                            state: ElementState::Pressed,
+                            ..
+                        },
                     ..
                 } => match logical_key {
                     Key::Named(NamedKey::Escape) => window_target.exit(),
@@ -61,13 +69,17 @@ fn main() {
                         "s" => cam_y -= 0.1,
                         "d" => cam_x += 0.1,
                         "q" => taa = !taa,
+                        "p" => {
+                            let points = get_points_dfs(&generate_tree(TreeType::RandomTree), RDEPTH);
+                            render.set_vertex_buffer(points);
+                        }
                         _ => (),
                     },
                     _ => (),
                 },
                 WindowEventType::RedrawRequested => {
                     let current_time = now.elapsed().unwrap_or_default().as_millis() as f32;
-                    render.draw(cam_x, cam_y, if rotation {current_time} else {0.}, taa);
+                    render.draw(cam_x, cam_y, if rotation { current_time } else { 0. }, taa);
                     window.request_redraw();
                 }
                 _ => (),

@@ -1,10 +1,11 @@
 // rotate - move - scale - rotate
 
 extern crate nalgebra as na;
-use std::collections::VecDeque;
 use std::f32::consts::PI;
+use std::{collections::VecDeque, hash::RandomState};
 
 use na::{Affine3, Point3, RealField, Rotation3, Scale3, Translation3};
+use rand::random;
 
 // todo - generalize type
 pub fn get_transformation_matrix<T: RealField>(
@@ -114,4 +115,43 @@ pub fn test_actually_nice_tree() -> [Affine3<f32>; 3] {
         _get_2dd_transformation(0., 0.65),
         _get_2dd_transformation(PI / 4., 0.5),
     ]
+}
+
+pub enum TreeType {
+    RandomTree,
+}
+
+pub fn generate_tree(tree_type: TreeType) -> Vec<Affine3<f32>> {
+    match tree_type {
+        TreeType::RandomTree => generate_random_tree(),
+    }
+}
+
+pub fn generate_random_tree() -> Vec<Affine3<f32>> {
+    let uniform_scale = &|s: f32| -> Scale3<f32> { Scale3::new(s, s, s) };
+    vec![
+        get_transformation_matrix(
+            &random_rotation(),
+            &Translation3::new(0., 1., 0.),
+            &uniform_scale(0.3),
+        ),
+        get_transformation_matrix(
+            &random_rotation(),
+            &Translation3::new(0., 1., 0.),
+            &Scale3::new(0.7, 0.7, 0.7),
+        ),
+        get_transformation_matrix(
+            &random_rotation(),
+            &Translation3::new(0., 1., 0.),
+            &Scale3::new(0.7, 0.7, 0.7),
+        ),
+    ]
+}
+
+pub fn random_rotation() -> Rotation3<f32> {
+    Rotation3::from_euler_angles(
+        2. * PI * random::<f32>(),
+        2. * PI * random::<f32>(),
+        2. * PI * random::<f32>(),
+    )
 }
