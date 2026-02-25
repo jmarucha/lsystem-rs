@@ -8,7 +8,7 @@ use glium::{
 use nalgebra::{Isometry3, Perspective3, Point3, Vector3};
 use rand::random_range;
 
-use crate::glue::points_to_vertices;
+use crate::glue::{point_to_array, points_to_vertices};
 
 #[derive(Copy, Clone)]
 pub struct Vertex {
@@ -27,6 +27,7 @@ pub struct Render {
     indices: NoIndices,
     program: Program,
     vertex_buffer: Option<VertexBuffer<Vertex>>,
+    origin: Option<Point3<f32>>,
     previous_frame: Texture2d,
     target_frame: Texture2d,
     blend_program: Program,
@@ -60,9 +61,11 @@ impl Render {
             uniform mat4 pmatrix;
             uniform mat4 camera;
             uniform vec2 taa_offset;
+            uniform vec3 origin;
 
             void main() {
-                vec4 new_position = pmatrix*camera*vec4(rotate2d(current_time/1000) * position, 1.0);
+                vec3 pos = rotate2d(current_time/1000) * (position - origin);
+                vec4 new_position = pmatrix*camera*vec4(pos, 1.0);
                 // new_position.y = new_position.y - 3.;
                 new_position.xy += taa_offset;
                 gl_Position = new_position;
@@ -145,6 +148,7 @@ impl Render {
             indices,
             program,
             vertex_buffer: None,
+            origin: None,
             previous_frame,
             target_frame,
             blend_program,
@@ -153,6 +157,10 @@ impl Render {
     }
 
     pub fn set_points(self: &mut Self, points: Vec<Point3<f32>>) -> &mut Self {
+        let bbox_min = points.iter().fold(Point3::origin(), |x,y| Point3::inf(&x,y) );
+        let bbox_max = points.iter().fold(Point3::origin(), |x,y| Point3::sup(&x,y) );
+        self.origin = Some(bbox_max.lerp(&bbox_min, 0.5));
+
         let shape = points_to_vertices(points);
         let vertex_buffer = VertexBuffer::new(&self.display, &shape).unwrap();
         self.vertex_buffer = Some(vertex_buffer);
@@ -214,6 +222,7 @@ impl Render {
                     primary_c: [1.,0.,0.] as [f32; _],
                     highlight_c: [0.8, 1., 0.0f32] as [f32; _],
                     taa_offset: if taa {taa_offset} else {[0., 0.]},
+                    origin: point_to_array(self.origin.unwrap())
                 },
                 &params,
             )
