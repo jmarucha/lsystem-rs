@@ -62,6 +62,7 @@ Default recursion depth: 13 levels
 - **Space** - Toggle automatic tree rotation
 - **N** - Generate a new random tree
 - **Q** - Toggle temporal anti-aliasing (TAA)
+- **F** - Toggle full screen
 - **Esc** - Exit application
 
 ## Performance

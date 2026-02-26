@@ -19,6 +19,7 @@ use glium::winit::event::WindowEvent as WindowEventType;
 use glium::winit::keyboard::Key;
 use glium::winit::keyboard::NamedKey;
 use glium::winit::window::Fullscreen;
+use rand::random;
 
 #[cfg(debug_assertions)]
 const RDEPTH: i32 = 10;
@@ -80,7 +81,7 @@ fn main() {
                             }
                             "n" => {
                                 let points =
-                                    get_points_dfs(&generate_tree(TreeType::RandomTree), RDEPTH);
+                                    get_points_dfs(&generate_tree(random()), RDEPTH);
                                 render.set_points(points);
                             }
                             "f" => match window.fullscreen() {
