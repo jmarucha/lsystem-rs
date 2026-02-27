@@ -1,10 +1,16 @@
 # L-System Tree Generator
 
-3D visualization of procedurally generated trees using L-Systems (Lindenmayer Systems) in Rust.
+3D visualization of procedurally generated trees using IFS in Rust.
 
 ## Overview
 
-This project implements an interactive 3D tree generator that creates realistic tree structures using L-System rules and transformation matrices. The generated trees are visualized in real-time using OpenGL rendering through Glium.
+This project implements an interactive 3D tree generator that creates ~realistic~ tree structures using L-System rules and transformation matrices. The generated trees are visualized in real-time using OpenGL rendering through Glium.
+
+It's more of IFS thing, but you can write it as primitive l-system
+A -> AA, A->AB,...
+B -> BA, B->BB,...
+
+The name stays because if you look at wiki, L-system article gives trees, and IFS gives clouds, so I guess it stays.
 
 ## Images
 
@@ -21,7 +27,7 @@ This project implements an interactive 3D tree generator that creates realistic 
 - **Multiple Traversal Algorithms**: 
   - Depth-First Search (DFS) - fastest
   - Breadth-First Search (BFS) - alternative traversal
-  - Batched processing - experimental
+  - Batched processing - this is useless
 - **Interactive Controls**: Real-time camera control and tree regeneration
 - **Benchmark Suite**: Criterion-based benchmarks for performance analysis across different tree depths
 
@@ -41,7 +47,7 @@ This project implements an interactive 3D tree generator that creates realistic 
 - **rand** (0.10) - Random number generation for procedural variation
 - **criterion** (0.5) - Benchmarking framework with HTML reports
 
-## Build & Run
+## Build & Run (recommended)
 
 ### Debug Build (Less _performante_)
 ```bash
@@ -55,6 +61,14 @@ cargo build --release
 ./target/release/lsystem
 ```
 Default recursion depth: 13 levels
+
+## I prefer downloading random binaries on the internet
+
+Here you go, pick one from [CI actions](https://github.com/jmarucha/lsystem-rs/actions).
+
+Versions for Linux and Windows (mingw) are built automatically.
+
+Windows Defender is wonky with some builds and marks them as a dangerous and mighty "Settings Changer" malware - if you have any idea what's that about, lmk.
 
 ## Interactive Controls
 
@@ -86,9 +100,9 @@ Trees are generated using transformation matrices that define how branches grow.
 The renderer uses:
 - Vertex shaders for dynamic point positioning and animation
 - Line rendering to visualize tree branches
-- Rudimentary temporal anti-aliasing for smoother visuals (enable for still images, otherwise it sucks)
+- Rudimentary temporal anti-aliasing for smoother visuals (enable only for still images, otherwise it sucks)
 
-It's a rather primitive pipeline, and TAA has no motion conservation, so it's basically camera shake with PS2-style blur
+It's a rather primitive pipeline, and TAA has no motion conservation, so it's basically camera shake with PS2-style blur.
 
 
 ## Optimization Notes
@@ -101,4 +115,5 @@ It's a rather primitive pipeline, and TAA has no motion conservation, so it's ba
 ## Future Improvements
 
 - Additional tree generators.
-- Improved batched traversal performance, possibly parallel.
+- Improved batched traversal performance, possibly in parallel.
+- Comply to MS Windows `.scr` command line options, to use it as a screensaver.
