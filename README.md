@@ -47,7 +47,7 @@ The name stays because if you look at wiki, L-system article gives trees, and IF
 - **rand** (0.10) - Random number generation for procedural variation
 - **criterion** (0.5) - Benchmarking framework with HTML reports
 
-## Build & Run (recommended)
+## Build & Run
 
 ### Debug Build (Less _performante_)
 ```bash
@@ -62,7 +62,7 @@ cargo build --release
 ```
 Default recursion depth: 13 levels
 
-## I prefer downloading random binaries on the internet
+### I prefer executing random binaries from the internet
 
 Here you go, pick one from [CI actions](https://github.com/jmarucha/lsystem-rs/actions).
 
