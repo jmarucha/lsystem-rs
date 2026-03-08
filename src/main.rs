@@ -41,7 +41,7 @@ fn main() {
     // let points = get_points_dfs(&test_actually_nice_tree(), RDEPTH);
     let mut render = Render::init_render(display);
     {
-        let points = get_points_dfs(&generate_tree(TreeType::RandomTree), RDEPTH);
+        let points = get_points_dfs(&generate_tree(TreeType::Random), RDEPTH);
         render.set_points(points);
     }
 
@@ -75,9 +75,11 @@ fn main() {
                             "s" => cam_y -= 0.1,
                             "d" => cam_x += 0.1,
                             "q" => taa = !taa,
+                            "c" => {
+                                render.set_random_color();
+                            }
                             "n" => {
-                                let points =
-                                    get_points_dfs(&generate_tree(random()), RDEPTH);
+                                let points = get_points_dfs(&generate_tree(random()), RDEPTH);
                                 render.set_points(points);
                             }
                             "f" => match window.fullscreen() {
@@ -94,7 +96,7 @@ fn main() {
                         },
                         _ => (),
                     },
-                    WindowEventType::Resized(PhysicalSize {width, height}) => {
+                    WindowEventType::Resized(PhysicalSize { width, height }) => {
                         render.resize_buffers(width, height);
                     }
                     WindowEventType::RedrawRequested => {

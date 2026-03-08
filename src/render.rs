@@ -7,7 +7,7 @@ use glium::{
     glutin::surface::WindowSurface,
     index::{NoIndices, PrimitiveType},
 };
-use nalgebra::{Isometry3, Perspective3, Point3, Vector3};
+use nalgebra::{Isometry3, Perspective3, Point3, Vector3, clamp};
 use rand::random_range;
 
 use crate::glue::{point_to_array, points_to_vertices};
@@ -34,6 +34,8 @@ pub struct Render {
     target_frame: Texture2d,
     blend_program: Program,
     full_screen_quad: VertexBuffer<Vertex2d>,
+    primary_color: [f32; 3],
+    secondary_color: [f32; 3],
 }
 
 impl Render {
@@ -155,6 +157,8 @@ impl Render {
             target_frame,
             blend_program,
             full_screen_quad,
+            primary_color: fullbright_hue(0.),
+            secondary_color: fullbright_hue(30.),
         }
     }
 
@@ -176,6 +180,13 @@ impl Render {
     pub fn resize_buffers(&mut self, width: u32, height: u32) -> &mut Self {
         self.target_frame = Texture2d::empty(&self.display, width, height).unwrap();
         self.previous_frame = Texture2d::empty(&self.display, width, height).unwrap();
+        self
+    }
+
+    pub fn set_random_color(&mut self) -> &mut Self {
+        let hue = rand::random_range(0.0..360.0);
+        self.primary_color = fullbright_hue(hue);
+        self.secondary_color = fullbright_hue(hue + random_range(-30.0..30.0));
         self
     }
 
@@ -231,10 +242,10 @@ impl Render {
                     current_time: current_time,
                     pmatrix: perspective,
                     camera: camera,
-                    primary_c: [1.,0.,0.] as [f32; _],
-                    highlight_c: [0.8, 1., 0.0f32] as [f32; _],
+                    primary_c: self.primary_color,
+                    highlight_c: self.secondary_color,
                     taa_offset: if taa {taa_offset} else {[0., 0.]},
-                    origin: point_to_array(self.origin.unwrap())
+                    origin: point_to_array(self.origin.unwrap()),
                 },
                 &params,
             )
@@ -293,4 +304,20 @@ impl Render {
 
         self
     }
+}
+
+fn fullbright_hue(hue: f32) -> [f32; 3] {
+    let normalize_modulo = |h: f32| -> f32 { (h + 180.) % 360. - 180. };
+    let color_mag = |hue: f32, central_hue: f32| -> f32 {
+        clamp(
+            (120. - normalize_modulo(hue - central_hue).abs()) / 60.,
+            0.,
+            1.,
+        )
+    };
+    [
+        color_mag(hue, 0.),
+        color_mag(hue, 120.),
+        color_mag(hue, 240.),
+    ]
 }

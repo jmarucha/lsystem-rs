@@ -5,7 +5,11 @@ use std::collections::VecDeque;
 use std::f32::consts::PI;
 
 use na::{Affine3, Point3, RealField, Rotation3, Scale3, Translation3};
-use rand::{Rng, RngExt, distr::{Distribution, StandardUniform}, random, random_range};
+use rand::{
+    Rng, RngExt,
+    distr::{Distribution, StandardUniform},
+    random, random_range,
+};
 
 // todo - generalize type
 pub fn get_transformation_matrix<T: RealField>(
@@ -119,34 +123,33 @@ pub fn test_actually_nice_tree() -> [Affine3<f32>; 3] {
 }
 
 pub enum TreeType {
-    RandomTree,
-    RandomScaledTree,
-    Degree45Tree,
+    Random,
+    RandomScaled,
+    Degree45,
 }
-
 
 impl Distribution<TreeType> for StandardUniform {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> TreeType {
         match rng.random_range(0..3) {
-            0 => TreeType::RandomTree,
-            1 => TreeType::RandomScaledTree,
-            _ => TreeType::Degree45Tree,
+            0 => TreeType::Random,
+            1 => TreeType::RandomScaled,
+            _ => TreeType::Degree45,
         }
     }
 }
 
 pub fn generate_tree(tree_type: TreeType) -> Vec<Affine3<f32>> {
     match tree_type {
-        TreeType::RandomTree => generate_random_tree(),
-        TreeType::RandomScaledTree => generate_scale_hierarchy_tree(),
-        TreeType::Degree45Tree => generate_degree_45_tree(),
+        TreeType::Random => generate_random_tree(),
+        TreeType::RandomScaled => generate_scale_hierarchy_tree(),
+        TreeType::Degree45 => generate_degree_45_tree(),
     }
 }
 
 pub fn generate_random_tree() -> Vec<Affine3<f32>> {
     // as random as it can be
     let uniform_scale = &|s: f32| -> Scale3<f32> { Scale3::new(s, s, s) };
-    let random_scale = || -> Scale3<f32> { uniform_scale(random_range((0.2)..(0.8))) };
+    let random_scale = || -> Scale3<f32> { uniform_scale(random_range(0.2..0.8)) };
     vec![
         get_transformation_matrix(
             &random_rotation(),
@@ -166,12 +169,11 @@ pub fn generate_random_tree() -> Vec<Affine3<f32>> {
     ]
 }
 
-
 pub fn generate_scale_hierarchy_tree() -> Vec<Affine3<f32>> {
     // sqrt(2) scale for accidental symmetries. doesn't look like much of change
     let uniform_scale = &|s: f32| -> Scale3<f32> { Scale3::new(s, s, s) };
 
-    let scale_base = (2. as f32).sqrt().sqrt();
+    let scale_base = (2_f32).sqrt().sqrt();
     let random_scale = || -> Scale3<f32> { uniform_scale(scale_base.powi(random_range(-6..-0))) };
 
     vec![
@@ -197,16 +199,17 @@ pub fn generate_degree_45_tree() -> Vec<Affine3<f32>> {
     // only 45 degree twists allowed. sqrt(2) scale for accidental symmetries
     let uniform_scale = &|s: f32| -> Scale3<f32> { Scale3::new(s, s, s) };
 
-    let scale_base = (2. as f32).sqrt();
+    let scale_base = (2_f32).sqrt();
     let random_angle_45 = || -> f32 { random_range(0..8) as f32 * PI / 4.0 };
     let random_rotation_45 = || -> Rotation3<f32> {
-        Rotation3::from_euler_angles(random_angle_45(), 0., random_angle_45()) };
+        Rotation3::from_euler_angles(random_angle_45(), 0., random_angle_45())
+    };
 
     vec![
         get_transformation_matrix(
             &random_rotation_45(),
             &Translation3::new(0., 1., 0.),
-            &uniform_scale(1.0/scale_base),
+            &uniform_scale(1.0 / scale_base),
         ),
         get_transformation_matrix(
             &random_rotation_45(),
@@ -216,7 +219,7 @@ pub fn generate_degree_45_tree() -> Vec<Affine3<f32>> {
         get_transformation_matrix(
             &random_rotation_45(),
             &Translation3::new(0., 1., 0.),
-            &uniform_scale(0.5/scale_base),
+            &uniform_scale(0.5 / scale_base),
         ),
     ]
 }
