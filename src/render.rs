@@ -173,8 +173,7 @@ impl Render {
         self
     }
 
-    pub fn resize_buffers(&mut self) -> &mut Self {
-        let (width, height) = self.display.get_framebuffer_dimensions();
+    pub fn resize_buffers(&mut self, width: u32, height: u32) -> &mut Self {
         self.target_frame = Texture2d::empty(&self.display, width, height).unwrap();
         self.previous_frame = Texture2d::empty(&self.display, width, height).unwrap();
         self

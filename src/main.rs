@@ -12,6 +12,7 @@ use crate::lsystem::get_points_dfs;
 extern crate glium;
 
 use crate::render::Render;
+use glium::winit::dpi::PhysicalSize;
 use glium::winit::event::ElementState;
 use glium::winit::event::Event::WindowEvent;
 use glium::winit::event::KeyEvent;
@@ -73,12 +74,7 @@ fn main() {
                             "a" => cam_x -= 0.1,
                             "s" => cam_y -= 0.1,
                             "d" => cam_x += 0.1,
-                            "q" => {
-                                taa = !taa;
-                                if taa {
-                                    render.resize_buffers();
-                                }
-                            }
+                            "q" => taa = !taa,
                             "n" => {
                                 let points =
                                     get_points_dfs(&generate_tree(random()), RDEPTH);
@@ -98,6 +94,9 @@ fn main() {
                         },
                         _ => (),
                     },
+                    WindowEventType::Resized(PhysicalSize {width, height}) => {
+                        render.resize_buffers(width, height);
+                    }
                     WindowEventType::RedrawRequested => {
                         let current_time = now.elapsed().unwrap_or_default().as_millis() as f32;
                         render.draw(cam_x, cam_y, if rotation { current_time } else { 0. }, taa);
